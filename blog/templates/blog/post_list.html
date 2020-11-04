@@ -1,19 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>IgorKED</title>
-</head>
-<body>
-    <body>
-        <div>
-    <h1><a href="/">Django Blog</a></h1>
-</div>
+{% extends 'blog/base.html' %}
 
+{% block content %}
 {% for post in posts %}
-    <div>
-        <p>published: {{ post.published_date }}</p>
-        <h1><a href="">{{ post.title }}</a></h1>
+    <div class="post">
+        <div class="date">
+            <p>Posted: {{ post.published_date }}</p>
+        </div>
+        <h1><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a></h1>
         <p>{{ post.text|linebreaksbr }}</p>
     </div>
 {% endfor %}
+{% endblock %}
