@@ -7,10 +7,25 @@
                 {{ post.published_date }}
             </div>
         {% endif %}
-        {% if user.is_authenticated %}
+        {% if user.is_authenticated and post.author == request.user %}
      <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}"><span class="glyphicon glyphicon-pencil"></span></a>
         {% endif %}
         <h1>{{ post.title }}</h1>
-        <p>{{ post.text|linebreaksbr }}</p>
+        <h3>{{ post.text|linebreaksbr }}</h3>
+        <h4>Comments</h4>
+        {% for comm in comment %}
+        {{ comm.user }}<br>
+        {{ comm.text }}<br>
+        {{ comm.created }}<br><br>
+        {% endfor %}
+         {% if user.is_authenticated %}
+            <form action="" method="post">
+            {% csrf_token %}
+            {{ form.as_p}}
+            <input type="submit" value="Send">
+            </form>
+         {% else %}
+        <p>To post a comment you must be registered on the site.</p>
+        {% endif %}
     </div>
 {% endblock %}

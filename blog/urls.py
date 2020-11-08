@@ -1,6 +1,6 @@
 from django.urls import path, include
-from blog.views import dashboard, register
 from . import views
+from .views import dashboard
 
 
 urlpatterns = [
@@ -10,5 +10,6 @@ urlpatterns = [
     path('post/<int:pk>/edit/', views.post_edit, name='post_edit'),
     path('accounts/', include("django.contrib.auth.urls")),
     path("dashboard/", dashboard, name="dashboard"),
-    path("register/", register, name='register'),
+    path("register/", views.register, name='register'),
 ]
+

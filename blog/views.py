@@ -1,21 +1,39 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post
+from .models import Post, CommentPost
 from django.utils import timezone
-from .forms import PostForm
-from django.contrib.auth import login
-from django.urls import reverse
-from blog.forms import CustomUserCreationForm
+from .forms import PostForm, UserRegistrationForm, CommentForm
+from django.db.models import Q
+
+
 # Create your views here.
 
 
 def post_list(request):
-    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    search_query = request.GET.get('search', '')
+    if search_query:
+        posts = Post.objects.filter(Q(title__icontains=search_query) |
+ \
+                                    Q(text__icontains=search_query))
+
+    else:
+        posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-published_date')
     return render(request, 'blog/post_list.html', {'posts': posts})
 
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    return render(request, 'blog/post_detail.html', {'post': post})
+    comment = CommentPost.objects.filter(post=post, created__lte=timezone.now()).order_by('-created')
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comm = form.save(commit=False)
+            comm.user = request.user
+            comm.post = post
+            comm.save()
+    else:
+        form = CommentForm()
+    return render(request, 'blog/post_detail.html', {'post': post, 'form': form,
+                                                     'comment': comment})
 
 
 def post_new(request):
@@ -48,18 +66,20 @@ def post_edit(request, pk):
 
 
 def dashboard(request):
-    return render(request, "users/dashboard.html")
+    return render(request, "blog/dashboard.html")
 
 
 def register(request):
-    if request.method == "GET":
-        return render(
-            request, "users/register.html",
-            {"form": CustomUserCreationForm}
-        )
-    elif request.method == "POST":
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect(reverse("dashboard"))
+    if request.method == 'POST':
+        user_form = UserRegistrationForm(request.POST)
+        if user_form.is_valid():
+            # Create a new user object but avoid saving it yet
+            new_user = user_form.save(commit=False)
+            # Set the chosen password
+            new_user.set_password(user_form.cleaned_data['password'])
+            # Save the User object
+            new_user.save()
+            return render(request, 'blog/register_done.html', {'new_user': new_user})
+    else:
+        user_form = UserRegistrationForm()
+    return render(request, 'blog/register.html', {'user_form': user_form})
