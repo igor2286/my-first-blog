@@ -30,6 +30,7 @@ def post_detail(request, pk):
             comm.user = request.user
             comm.post = post
             comm.save()
+            return redirect('post_detail', pk=post.pk)
     else:
         form = CommentForm()
     return render(request, 'blog/post_detail.html', {'post': post, 'form': form,
